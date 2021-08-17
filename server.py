@@ -1,13 +1,7 @@
 from flask import Flask, Response, request
 from json import dumps
-
+from courses import courses
 app = Flask(__name__)
-
-courses = [
-    {"id": 1, "name": "COMP1511"},
-    {"id": 2, "name": "COMP1521"},
-    {"id": 3, "name": "COMP1531"},
-]
 
 
 @app.route("/", methods=['GET'])
@@ -35,7 +29,7 @@ def add_course():
     }
 
     courses.append(course)
-    return course
+    return dumps(course)
 
 
 @app.route("/api/courses/<id>", methods=["GET"])
@@ -45,7 +39,17 @@ def get_course(id):
             "The course ID was not found."
         )
     course = courses[int(id) - 1]
-    return course
+    return dumps(course)
+
+
+@app.route("/api/courses/<id>", methods=["DELETE"])
+def delete_course(id):
+    if len(courses) < int(id):
+        return Response(
+            "The course ID was not found."
+        )
+    course = courses.pop(int(id) - 1)
+    return dumps(course)
 
 
 if __name__ == "__main__":
