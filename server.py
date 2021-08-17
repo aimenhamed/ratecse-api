@@ -38,5 +38,15 @@ def add_course():
     return course
 
 
+@app.route("/api/courses/<id>", methods=["GET"])
+def get_course(id):
+    if len(courses) < int(id):
+        return Response(
+            "The course ID was not found."
+        )
+    course = courses[int(id) - 1]
+    return course
+
+
 if __name__ == "__main__":
     app.run()
