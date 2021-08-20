@@ -29,6 +29,7 @@ def add_course():
     course = {
         "id": len(courses) + 1,
         "name": name,
+        "likes": 0,
     }
 
     courses.append(course)
