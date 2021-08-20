@@ -35,13 +35,36 @@ def add_course():
     return dumps(course)
 
 
+@app.route("/api/courses/likes/<id>", methods=["POST"])
+def like_course(id):
+    if len(courses) < int(id):
+        return Response(
+            "The course ID was not found.",
+            status=400,
+        )
+    courses[int(id)]["likes"] += 1
+    return dumps(courses[int(id)]["likes"])
+
+
+@app.route("/api/courses/likes/<id>", methods=["DELETE"])
+def unlike_course(id):
+    if len(courses) < int(id):
+        return Response(
+            "The course ID was not found.",
+            status=400,
+        )
+    courses[int(id)]["likes"] -= 1
+    return dumps(courses[int(id)]["likes"])
+
+
 @app.route("/api/courses/<id>", methods=["GET"])
 def get_course(id):
     if len(courses) < int(id):
         return Response(
-            "The course ID was not found."
+            "The course ID was not found.",
+            status=400,
         )
-    course = courses[int(id) - 1]
+    course = courses[int(id)]
     return dumps(course)
 
 
@@ -49,9 +72,10 @@ def get_course(id):
 def delete_course(id):
     if len(courses) < int(id):
         return Response(
-            "The course ID was not found."
+            "The course ID was not found.",
+            status=400,
         )
-    course = courses.pop(int(id) - 1)
+    course = courses.pop(int(id))
     return dumps(course)
 
 
