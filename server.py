@@ -27,7 +27,7 @@ def add_course():
             status=400,
         )
     course = {
-        "id": len(courses) + 1,
+        "id": len(courses),
         "name": name,
         "likes": 0,
     }
