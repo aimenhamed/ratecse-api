@@ -1,3 +1,4 @@
+import pymysql
 from flask import Flask, Response, request
 from json import dumps
 from courses import courses
@@ -7,6 +8,22 @@ app = Flask(__name__)
 CORS(app)
 
 
+def db_connection():
+    conn = None
+    try:
+        conn = pymysql.connect(
+            host='sql6.freesqldatabase.com',
+            database='sql6432733',
+            user='sql6432733',
+            password='MTTiE8MquJ',
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
+    except pymysql.error as e:
+        print(e)
+    return conn
+
+
 @app.route("/", methods=['GET'])
 def home():
     return "Hello World!"
@@ -14,48 +31,72 @@ def home():
 
 @app.route("/api/courses", methods=['GET'])
 def get_courses():
-    return dumps(courses)
+    conn = db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM course")
+    courses = [
+        dict(id=row['id'], name=row['name'], likes=row['likes'])
+        for row in cursor.fetchall()
+    ]
+    if courses is not None:
+        return dumps(courses)
 
 
 @app.route("/api/courses", methods=["POST"])
 def add_course():
-    req = request.get_json()
-    name = req["name"]
-    if len(name) != 8:
-        return Response(
-            "Name is required and should be 8 chars long, e.g. COMP1511",
-            status=400,
-        )
-    course = {
-        "id": len(courses),
-        "name": name,
-        "likes": 0,
-    }
-
-    courses.append(course)
-    return dumps(course)
+    conn = db_connection()
+    cursor = conn.cursor()
+    new_name = request.form["name"]
+    new_likes = request.form["likes"]
+    sql = """INSERT INTO course (name, likes)
+            VALUES (%s, %s)"""
+    cursor = cursor.execute(sql, (new_name, new_likes))
+    conn.commit()
+    return dumps("Hi")
 
 
-@app.route("/api/courses/likes/<id>", methods=["POST"])
+@app.route("/api/courses/likes/<int:id>", methods=["PUT"])
 def like_course(id):
-    if len(courses) < int(id):
-        return Response(
-            "The course ID was not found.",
-            status=400,
-        )
-    courses[int(id)]["likes"] += 1
-    return dumps(courses[int(id)]["likes"])
+    conn = db_connection()
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM course")
+    courses = [
+        dict(id=row['id'], name=row['name'], likes=row['likes'])
+        for row in cursor.fetchall()
+    ]
+
+    cursor = conn.cursor()
+    new = courses[id - 1]["likes"] + 1
+    sql = """UPDATE course
+            SET likes=%s
+            WHERE id=%s """
+
+    cursor.execute(sql, (str(new), str(id)))
+    conn.commit()
+    return dumps(new)
 
 
-@app.route("/api/courses/likes/<id>", methods=["DELETE"])
+@app.route("/api/courses/likes/<int:id>", methods=["DELETE"])
 def unlike_course(id):
-    if len(courses) < int(id):
-        return Response(
-            "The course ID was not found.",
-            status=400,
-        )
-    courses[int(id)]["likes"] -= 1
-    return dumps(courses[int(id)]["likes"])
+    conn = db_connection()
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM course")
+    courses = [
+        dict(id=row['id'], name=row['name'], likes=row['likes'])
+        for row in cursor.fetchall()
+    ]
+
+    cursor = conn.cursor()
+    new = courses[id - 1]["likes"] - 1
+    sql = """UPDATE course
+            SET likes=%s
+            WHERE id=%s """
+
+    cursor.execute(sql, (str(new), str(id)))
+    conn.commit()
+    return dumps(new)
 
 
 @app.route("/api/courses/<id>", methods=["GET"])
